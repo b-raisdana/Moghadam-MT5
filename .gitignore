@@ -1,0 +1,14 @@
+/Logs/
+/Logs/*
+/Logs
+Logs/
+Logs/*
+Logs/*.*
+*.log
+*.chr
+*.wnd
+*.dat
+/Profiles/
+/Profiles/*
+Profiles/
+Profiles/*
