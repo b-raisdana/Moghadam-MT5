@@ -32,8 +32,7 @@ void OnStart()
    else{
       Print("CustomRatesDelete Error code: ", GetLastError());
    }
-   ChartOpen(chart_symbol, PERIOD_M1);
-   ChartClose(chart_id);
+   ChartRedraw(chart_id);
    return;
    
    
