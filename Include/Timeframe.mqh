@@ -28,16 +28,24 @@
 #include <Generic\HashMap.mqh>
 
 CHashMap<double, int> periodToChartMap;
+CHashMap<double, int> GetPeriodToChartMap()
+  {
+   if(!periodToChartMap.Count()>0)
+     {
+      periodToChartMap.Add(1.0, OBJ_PERIOD_M1);
+      periodToChartMap.Add(5.0, OBJ_PERIOD_M5);
+      periodToChartMap.Add(15.0, OBJ_PERIOD_M15);
+      periodToChartMap.Add(30.0, OBJ_PERIOD_M30);
+      periodToChartMap.Add(60.0, OBJ_PERIOD_H1);
+      periodToChartMap.Add(240.0, OBJ_PERIOD_H4);
+      periodToChartMap.Add(1440.0, OBJ_PERIOD_D1);
+      periodToChartMap.Add(10080.0, OBJ_PERIOD_W1);
+      periodToChartMap.Add(43200.0, OBJ_PERIOD_MN1);
+      periodToChartMap.GetKeys();
+     }
+   return periodToChartMap;
+  }
 
-periodToChartMap.Add(1.0, OBJ_PERIOD_M1);
-periodToChartMap.Add(5.0, OBJ_PERIOD_M5);
-periodToChartMap.Add(15.0, OBJ_PERIOD_M15);
-periodToChartMap.Add(30.0, OBJ_PERIOD_M30);
-periodToChartMap.Add(60.0, OBJ_PERIOD_H1);
-periodToChartMap.Add(240.0, OBJ_PERIOD_H4);
-periodToChartMap.Add(1440.0, OBJ_PERIOD_D1);
-periodToChartMap.Add(10080.0, OBJ_PERIOD_W1);
-periodToChartMap.Add(43200.0, OBJ_PERIOD_MN1);
 //int supportedPeriods[] =
 //  {
 //   PERIOD_M1,  PERIOD_M2,   PERIOD_M3,   PERIOD_M4,   PERIOD_M5,   PERIOD_M6,   PERIOD_M10,   PERIOD_M12,   PERIOD_M15,
@@ -156,7 +164,8 @@ int CombineGeTimeframes(string timeframe)
   {
    int result = 0;
    double supported_chart_periods[];
-   periodToChartMap.KeysToArray(supported_chart_periods);
+   CHashMap<double, int> _periodToChartMap = GetPeriodToChartMap()
+   _periodToChartMap..KeysToArray(supported_chart_periods);
    for(int i = 0; i<ArraySize(supported_chart_periods); i++)
      {
       int timeframe_periods = TimeframeToPeriod(timeframe);
