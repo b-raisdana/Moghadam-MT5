@@ -21,7 +21,7 @@ void OnStart()
       string symbol_name = custom_symbols[i];
       if(!CustomSymbolCreate(symbol_name))
       {
-         Print("Failed to create custom symbol"+symbol_name +". Error code: ", GetLastError());
+         Print("Failed to create custom symbol "+symbol_name +". Error code: ", GetLastError());
          return;
       }
       else{

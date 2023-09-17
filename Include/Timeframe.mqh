@@ -6,46 +6,53 @@
 #property copyright "Behrooz"
 #property link      "https://www.mql5.com"
 //+------------------------------------------------------------------+
-//| defines                                                          |
+//|                                                                  |
 //+------------------------------------------------------------------+
-// #define MacrosHello   "Hello, world!"
-// #define MacrosYear    2010
-//+------------------------------------------------------------------+
-//| DLL imports                                                      |
-//+------------------------------------------------------------------+
-// #import "user32.dll"
-//   int      SendMessageA(int hWnd,int Msg,int wParam,int lParam);
-// #import "my_expert.dll"
-//   int      ExpertRecalculate(int wParam,int lParam);
-// #import
-//+------------------------------------------------------------------+
-//| EX5 imports                                                      |
-//+------------------------------------------------------------------+
-// #import "stdlib.ex5"
-//   string ErrorDescription(int error_code);
-// #import
-//+------------------------------------------------------------------+
-#include <Generic\HashMap.mqh>
-
-CHashMap<double, int> periodToChartMap;
-CHashMap<double, int> GetPeriodToChartMap()
+struct ChartInfo
   {
-   if(!periodToChartMap.Count()>0)
+   float             period;
+   int               chart_object_period;
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+class Charts
+  {
+protected:
+public:
+   static ChartInfo  chart_periods[];
+   static void       listKeys(float &keys[])
      {
-      periodToChartMap.Add(1.0, OBJ_PERIOD_M1);
-      periodToChartMap.Add(5.0, OBJ_PERIOD_M5);
-      periodToChartMap.Add(15.0, OBJ_PERIOD_M15);
-      periodToChartMap.Add(30.0, OBJ_PERIOD_M30);
-      periodToChartMap.Add(60.0, OBJ_PERIOD_H1);
-      periodToChartMap.Add(240.0, OBJ_PERIOD_H4);
-      periodToChartMap.Add(1440.0, OBJ_PERIOD_D1);
-      periodToChartMap.Add(10080.0, OBJ_PERIOD_W1);
-      periodToChartMap.Add(43200.0, OBJ_PERIOD_MN1);
-      periodToChartMap.GetKeys();
+      ArrayFree(keys);
+      ArrayResize(keys, ArraySize(chart_periods));
+      for(int i=0; i < ArraySize(chart_periods); i++)
+        {
+         keys[i] = chart_periods[i].period;
+        }
      }
-   return periodToChartMap;
-  }
-
+   static int        byKey(float key)
+     {
+      for(int i=0; i < ArraySize(chart_periods); i++)
+        {
+         if(chart_periods[i].period==key)
+            return chart_periods[i].chart_object_period;
+        }
+      Print(key + " key not found in chart_periods!");
+      return NULL;
+     }
+  };
+static ChartInfo Charts::chart_periods[] =
+  {
+     {1.0, OBJ_PERIOD_M1},
+     {5.0, OBJ_PERIOD_M5},
+     {15.0, OBJ_PERIOD_M15},
+     {30.0, OBJ_PERIOD_M30},
+     {60.0, OBJ_PERIOD_H1},
+     {240.0, OBJ_PERIOD_H4},
+     {1440.0, OBJ_PERIOD_D1},
+     {10080.0, OBJ_PERIOD_W1},
+     {43200.0, OBJ_PERIOD_MN1},
+  };
 //int supportedPeriods[] =
 //  {
 //   PERIOD_M1,  PERIOD_M2,   PERIOD_M3,   PERIOD_M4,   PERIOD_M5,   PERIOD_M6,   PERIOD_M10,   PERIOD_M12,   PERIOD_M15,
@@ -54,7 +61,7 @@ CHashMap<double, int> GetPeriodToChartMap()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int TimeframeToPeriod(string freq)
+int               TimeframeToPeriod(string freq)
   {
    if(StringFind(freq, "min") >= 0)
       return int(StringToInteger(StringSubstr(freq, 0, StringFind(freq, "min"))));
@@ -71,7 +78,7 @@ int TimeframeToPeriod(string freq)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int PeriodToIndex(int period)
+int               PeriodToIndex(int period)
   {
    if(period <= 0)
       return -1; // Return -1 if the input is non-positive to prevent log(0) or log(negative number)
@@ -82,7 +89,7 @@ int PeriodToIndex(int period)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int TimeframeToIndex(string timeframe)
+int               TimeframeToIndex(string timeframe)
   {
    int period = TimeframeToPeriod(timeframe);
    return PeriodToIndex(period);
@@ -102,7 +109,7 @@ color timeframe_color_map[] =
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-color TimeFrameColor(string timeframe)
+color             TimeFrameColor(string timeframe)
   {
    int timeframe_index = TimeframeToIndex(timeframe);
    int number_of_colors = ArraySize(timeframe_color_map);
@@ -112,7 +119,7 @@ color TimeFrameColor(string timeframe)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double DurationToMinutes(string duration)
+double            DurationToMinutes(string duration)
   {
    int daysPos = StringFind(duration, " days ");
    int hoursPos = StringFind(duration, ":", daysPos+6);
@@ -134,7 +141,7 @@ double DurationToMinutes(string duration)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-string DateTimeToString(datetime time)
+string            DateTimeToString(datetime time)
   {
    MqlDateTime struct_time;
    TimeToStruct(time, struct_time);
@@ -150,7 +157,7 @@ string DateTimeToString(datetime time)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-string ObjectTimeframe(string object_name)
+string            ObjectTimeframe(string object_name)
   {
    int start_pos = StringFind(object_name, " ") + 1;
    int end_pos = StringFind(object_name, "@") - start_pos;
@@ -160,27 +167,32 @@ string ObjectTimeframe(string object_name)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int CombineGeTimeframes(string timeframe)
+int               CombineGeTimeframes(string timeframe)
   {
    int result = 0;
-   double supported_chart_periods[];
-   CHashMap<double, int> _periodToChartMap = GetPeriodToChartMap()
-   _periodToChartMap..KeysToArray(supported_chart_periods);
+   float supported_chart_periods[] = {};
+   Charts::listKeys(supported_chart_periods);
+   int timeframe_period = TimeframeToPeriod(timeframe);
+   if(timeframe == "15min")
+     {
+      int a = 0;
+     }
    for(int i = 0; i<ArraySize(supported_chart_periods); i++)
      {
-      int timeframe_periods = TimeframeToPeriod(timeframe);
       double chart_period_key = supported_chart_periods[i];
       int chart_period_value = NULL;
-      periodToChartMap.TryGetValue(chart_period_key, chart_period_value);
-      if(supportedPeriods[i] >= chart_period_value)
-         result = result | supportedPeriods[i];
+      chart_period_value = Charts::byKey(chart_period_key);
+      if(timeframe_period >= chart_period_key)
+         result = result | chart_period_value;
+      else
+         return result;
      }
    return result;
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void SetObjectTimeframes(string object_name)
+void              SetObjectTimeframes(string object_name)
   {
    string timeframe = ObjectTimeframe(object_name);
    int timeframes_to_display = CombineGeTimeframes(timeframe);
@@ -190,4 +202,6 @@ void SetObjectTimeframes(string object_name)
       Print("Failed to set object timeframes. Error code: ", GetLastError());
      }
   }
+//+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
