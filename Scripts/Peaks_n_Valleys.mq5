@@ -159,6 +159,7 @@ int load_tops()
 bool tops_are_loaded = false;
 int OnInit()
   {
+   Print("Peaks_n_Valleys OnInit");
    if(!tops_are_loaded)
       load_tops();
    //update_object_display();
